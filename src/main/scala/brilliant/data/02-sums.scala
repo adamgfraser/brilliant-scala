@@ -85,6 +85,16 @@ object enum_basics {
     case object Crypto extends PaymentMethod
   }
 
+  trait Expr[A] { self =>
+    def evaluate: A =
+      ???
+  }
+
+  object Expr {
+    private final case class IntLiteral(value: Int) extends Expr[Int]
+    private final case class Sum(left: Expr[Int], right: Expr[Int]) extends Expr[Int]
+  }
+
   val myPaymentMethod: PaymentMethod =
     PaymentMethod.CreditCard(
       name = "Sherlock Holmes",
@@ -93,10 +103,10 @@ object enum_basics {
       securityCode = 123
     )
 
-  myPaymentMethod match {
-    case PaymentMethod.CreditCard(name, number, date, securityCode) =>
-      println(s"$name has a credit card with number $number, valid until $date, with security code $securityCode")
-  }
+  // myPaymentMethod match {
+  //   case PaymentMethod.CreditCard(name, number, date, securityCode) =>
+  //     println(s"$name has a credit card with number $number, valid until $date, with security code $securityCode")
+  // }
 
   object NotCrypto {
     def unapply(paymentMethod: PaymentMethod): Option[PaymentMethod] =
