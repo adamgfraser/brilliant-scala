@@ -26,7 +26,7 @@ object eithers {
    * Using both a type alias, and Scala's `Either` type, construct a type called `IntOrString` that
    * can either hold an `Int` or a `String`.
    */
-  type IntOrString = TODO
+  type IntOrString = Either[Int, String]
 
   /**
    * EXERCISE 2
@@ -34,7 +34,7 @@ object eithers {
    * Construct a value of type `IntOrString` that contains the string "Sherlock", using the
    * `Right(_)` constructor for `Either`.
    */
-  lazy val intOrString: IntOrString = TODO
+  lazy val intOrString: IntOrString = Left(42)
 
   /**
    * EXERCISE 3
@@ -75,6 +75,49 @@ object eithers {
  * (unique) label.
  */
 object enum_basics {
+
+  sealed trait PaymentMethod
+
+  object PaymentMethod {
+    final case class CreditCard(name: String, number: String, date: java.time.YearMonth, securityCode: Short) extends PaymentMethod
+    final case class WireTransfer(sender: String, recipient: String, amount: Int) extends PaymentMethod
+    case object Check extends PaymentMethod
+    case object Crypto extends PaymentMethod
+  }
+
+  val myPaymentMethod: PaymentMethod =
+    PaymentMethod.CreditCard(
+      name = "Sherlock Holmes",
+      number = "1234567890",
+      date = java.time.YearMonth.of(2020, 1),
+      securityCode = 123
+    )
+
+  myPaymentMethod match {
+    case PaymentMethod.CreditCard(name, number, date, securityCode) =>
+      println(s"$name has a credit card with number $number, valid until $date, with security code $securityCode")
+  }
+
+  object NotCrypto {
+    def unapply(paymentMethod: PaymentMethod): Option[PaymentMethod] =
+      paymentMethod match {
+        case PaymentMethod.Crypto => None
+        case _ => Some(paymentMethod)
+      }
+  }
+
+  sealed trait Result[+Error, +Success]
+
+  object Result {
+    final case class SuccessfulResult[Success](success: Success) extends Result[Nothing, Success]
+    final case class FailedResult[Error](error: Vector[Error]) extends Result[Error, Nothing]
+  }
+
+  // match may not be exhaustive.
+//   [warn] It would fail on the following inputs: Crypto, WireTransfer(_, _, _)
+// [warn]   myPaymentMethod match {
+// [warn]   ^
+// [warn] one warning found
 
   /**
    * EXERCISE 1

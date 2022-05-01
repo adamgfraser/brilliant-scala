@@ -1,6 +1,7 @@
 package brilliant.data
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext
 
 object intro {
 
@@ -111,6 +112,12 @@ object intro {
             _ map f
         }
 
+      // Int
+      // String
+
+      // List[Int]
+      // List
+
       implicit class CovariantSyntax[F[+_], A](as: F[A]) {
         def map[B](f: A => B)(implicit covariant: Covariant[F]): F[B] =
           covariant.map(f)(as)
@@ -167,4 +174,87 @@ object intro {
         case ListCase.Nil              => 0
       }
   }
+
+  // Principles:
+
+  // 1. Strongly prefer working with immutable data and operators that transform
+  //    that data
+  // 2. Use mutable state internally in some cases where it has clear performance
+  //    benefits
+  // 3. Avoid "fancy" features when not needed (use of implicits, type classes)
+
+  val myList = List(1, 2, 3)
+  0 :: myList
+  myList.sum
+
+  object Implicits {
+    // implicit val myExecutionContext: ExecutionContext =
+    //   ???
+
+    // def doSomethingWithExecutionContext(implicit ex: ExecutionContext) =
+    //   ???
+
+    // doSomethingWithExecutionContext
+  }
+
+  object Suggestions {
+
+    // Scala versus Python
+    // "edge cases"
+    // hard to jump into code using more advanced features
+    //   - "fancy types"
+    //   - extension methods
+    //   - maybe more just "coding best practices" - data validation
+    //   - async programming
+    //   - context bounds
+  }
+
+  object DataIntro {
+    // product types
+    //   A and B
+    //   CreditCard(name: String, number: String, expiry: Date)
+    //   record types
+    //   Any time you use the word "AND"
+
+
+    // sum types
+    //   A or B
+    //   Payment method - either credit card or check or cash or crypto
+    //   enum
+    //   Any time you use the word "EITHER" / "OR"
+
+    // Payment method
+       // CreditCard OR
+       //   name AND number AND expiry
+       // Check OR
+       // Cash OR
+       // Crypto
+
+    // trait - to describe an interface
+    // case class - to describe data
+   
+    // most functionality can be modeled as either unary or binary operators
+    // n-ary operators are often binary operators
+
+    trait Aged {
+      def age: Int
+    }
+
+    final case class Person(name: String, age: Int) extends Aged {
+      def incrementAge: Person =
+        copy(age = age + 1)
+    }
+
+    object Person {
+      def validate(name: String, age: Int): Option[Person] =
+        ???
+    }
+
+    final case class Art(name: String, artist: String, age: Int) extends Aged {
+      def incrementAge: Art =
+        copy(age = age + 1)
+    }
+
+  }
+
 }

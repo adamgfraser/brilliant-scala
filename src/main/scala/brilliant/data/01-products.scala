@@ -28,7 +28,7 @@ object tuples {
    * hold both the name of a `Person` (as a `String`), together with the age of the `Person` (as an
    * `Int`).
    */
-  type Person = TODO
+  type Person = (String, Int)
 
   /**
    * EXERCISE 2
@@ -36,7 +36,11 @@ object tuples {
    * Using the `Person` type alias that you just created, construct a value that has type `Person`,
    * whose name is "Sherlock Holmes", and whose age is 42.
    */
-  lazy val sherlockHolmes: Person = TODO
+  lazy val sherlockHolmes: Person = ("Sherlock Holmes", 42)
+
+  import java.time.YearMonth
+
+  type ??? = Nothing
 
   /**
    * EXERCISE 3
@@ -45,7 +49,24 @@ object tuples {
    * hold a credit card number (as a `String`), a credit card expiration date (as a
    * `java.time.YearMonth`), a full name (as a `String`), and a security code (as a `Short`).
    */
-  type CreditCard = TODO
+  type CreditCard = (String, YearMonth, String, Short)
+
+  /** 
+   * First string is first name, second string is last name.
+   */
+  type Name = (String, String)
+
+  /**
+   * First string is user name, second string is user password
+   */
+  type User = (String, String)
+
+  val name = ("John", "Doe")
+
+  val user: User = name
+
+
+  val zippedWithIndex = List("A", "B", "C").zipWithIndex
 
   /**
    * EXERCISE 4
@@ -53,7 +74,10 @@ object tuples {
    * Using the `CreditCard` type alias that you just created, construct a value that has type
    * `CreditCard`, with details invented by you.
    */
-  lazy val creditCard: CreditCard = TODO
+  lazy val creditCard: CreditCard = ("123123", YearMonth.now(), "Igor", 777)
+
+  // Advantage - simple to use, can use ad hoc
+  // Disadvantage - unnamed - hard to know what you is the semantic meaning
 }
 
 /**
@@ -83,7 +107,7 @@ object case_class_basics {
    * (as a `String` stored in a field called `name`), together with the age of the `Person` (as an
    * `Int` stored in a field called `age`).
    */
-  final case class Person()
+  final case class Person(name: String, age: Int)
 
   /**
    * EXERCISE 2
@@ -91,7 +115,9 @@ object case_class_basics {
    * Using the `Person` case class that you just created, construct a value that has type `Person`,
    * whose name is "Sherlock Holmes", and whose age is 42.
    */
-  lazy val sherlockHolmes: Person = TODO
+  lazy val sherlockHolmes: Person = Person("Sherlock Holmes", 42)
+
+  import java.time.YearMonth
 
   /**
    * EXERCISE 3
@@ -101,7 +127,7 @@ object case_class_basics {
    * `java.time.YearMonth` stored in a field called `expDate`), a full name (as a `String` stored in
    * a field called `name`), and a security code (as a `Short` in a field called `securityCode`).
    */
-  final case class CreditCard()
+  final case class CreditCard(number: String, expDate: YearMonth, name: String, securityCode: Short)
 
   /**
    * EXERCISE 4
@@ -109,7 +135,11 @@ object case_class_basics {
    * Using the `CreditCard` case class that you just created, construct a value that has type
    * `CreditCard`, with details invented by you.
    */
-  lazy val creditCard: CreditCard = TODO
+  lazy val creditCard: CreditCard = CreditCard("123123", YearMonth.now(), "Igor", 777)
+
+  val x = 1 // calcualte the right hand side immediately and save it
+  def y = 1 // calculate the right hand side when this is called each time it is called
+  lazy val z = 1 // calculated the right hand side when called the first time and then save the result
 }
 
 /**
@@ -122,6 +152,24 @@ object case_class_basics {
  */
 object case_class_utilities {
   final case class Person(name: String, age: Int)
+
+  val adam5 = Person(age = 42, name = "Adam")
+
+  class Person2(val name: String) {
+    override def equals(other: Any): Boolean =
+      other match {
+        case that: Person2 => this.name == that.name
+        case _ => false
+      }
+  }
+
+  val adam = new Person2("Adam")
+  val adam2 = new Person2("Adam")
+  adam == adam2 // false!
+
+  val adam3 = Person("Adam", 42)
+  val adam4 = Person("Adam", 42)
+  adam3 == adam4 // true!
 
   /**
    * EXERCISE 1
@@ -150,7 +198,7 @@ object case_class_utilities {
    * to change in the copy operation.
    */
   lazy val sherlockHolmes: Person = Person("Sherlock Holmes", 42)
-  lazy val youngerHolmes: Person  = TODO
+  lazy val youngerHolmes: Person  = sherlockHolmes.copy(age = sherlockHolmes.age - 10)
 }
 
 /**
@@ -173,7 +221,8 @@ object product_patterns {
    */
   def example1 =
     sherlockHolmes match {
-      case Person(name, age) => TODO
+      case Person(name, age) if name == "Sherlock" => TODO
+      case _ => TODO
     }
 
   /**
@@ -254,6 +303,13 @@ object product_patterns {
  */
 object case_class_generics {
 
+  // List[A] zipWithIndex => (A, Int)
+
+  final case class Indexed[A](value: A, index: Int)
+
+  val indexedString = Indexed("Hello", 0)
+  val indexedDouble = Indexed(3.14, 1)
+
   /**
    * EXERCISE 1
    *
@@ -261,21 +317,21 @@ object case_class_generics {
    * parameter, called `Payload`, and use this type parameter to define the type of the field called
    * `payload` already defined inside the case class.
    */
-  final case class Event(id: String, name: String, time: java.time.Instant, payload: String)
+  final case class Event[Payload](id: String, name: String, time: java.time.Instant, payload: Payload)
 
   /**
    * EXERCISE 2
    *
    * Construct a type alias called `EventString`, which is an `Event` but with a `String` payload.
    */
-  type EventString = TODO
+  type EventString = Event[String]
 
   /**
    * EXERCISE 2
    *
    * Construct an event that has a payload type of `Int`.
    */
-  lazy val eventInt = TODO
+  lazy val eventInt = Event("id", "name", java.time.Instant.now, 42)
 
   /**
    * EXERCISE 3
@@ -284,5 +340,5 @@ object case_class_generics {
    * called `Body`, which represents the body type of the request, and use this type parameter to
    * define the type of the field called `body` already defined inside the case class.
    */
-  final case class Request(body: Event, sender: String)
+  final case class Request[Payload](body: Event[Payload], sender: String)
 }
