@@ -7,14 +7,73 @@ package brilliant.data
  * subtyping in any programming language that supports the feature.
  */
 object subtyping {
+
+  // What's the deal with the + and -
+
+  trait Validation[+E, +A]
+
+  // trait LazyList[+A] {
+  //   def concat[A1 >: A](that: LazyList[A1]): LazyList[A1]
+  // }
+
+  // subtyping represents an "is a" relationship
+
+  // Something has an X and a Y --> case class
+  // "A credit card number has a name and a number and an expiration and a CVV"
+
+  // Something is an X or a Y --> sealed trait
+  // "A payment method is a credit card or a debit card"
+
+  // A cat is an animal
+  // subtyping relationship
+  // every cat is an animal
+
+  object Example {
+
+    trait Animal {
+      def name: String
+    }
+    trait Cat extends Animal {
+      def meow: Unit
+    }
+  }
+
+  // concrete types
+
   trait Animal
   trait Dog       extends Animal
-  trait Cat       extends Animal
+  trait Cat       extends Animal // cat is a subtype of animal
   object Midnight extends Cat
   object Ripley   extends Dog
 
   type IsSubtypeOf[A, B >: A]
   type IsSupertypeOf[A, B <: A]
+
+  type X = IsSubtypeOf[Cat, Animal]
+  // type Y = IsSubtypeOf[Animal, Cat]
+
+  // type constructor
+  // parameterized type
+  trait LazyList[+A] {
+    // def concat(that: LazyList[A]): LazyList[A]
+    // def map[B](f: A => B): LazyList[B]
+    // def widen[B >: A]: LazyList[B] =
+    //   map(a => a)
+  }
+
+  // no plus or minus ==> invariant
+  // invariance means that the catList and animalList are completely unrelated types
+
+  // plus ==> covariant
+  // covariance means that the catList is a subtype of the animalList
+
+  val animalList: LazyList[Animal] = ???
+  val catList: LazyList[Cat] = ???
+  val dogList: LazyList[Dog] = ???
+
+  // val animalList2: LazyList[Animal] = catList.widen[Animal].concat(dogList.widen[Animal])
+
+  type CatListIsAnimalList = IsSubtypeOf[LazyList[Cat], LazyList[Animal]] // doesn't compile but we want it to
 
   /**
    * EXERCISE 1

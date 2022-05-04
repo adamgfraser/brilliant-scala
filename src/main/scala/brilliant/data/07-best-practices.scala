@@ -1,5 +1,7 @@
 package brilliant.data
 
+import javax.swing.event.DocumentEvent.EventType
+
 /**
  * Some anti-patterns emerge when doing data modeling in Scala. Learning to spot and refactor such
  * anti-patterns is a very valuable skill that will keep data models precise and easy to maintain
@@ -18,18 +20,46 @@ package brilliant.data
  * handle all the combinations that do make sense.
  */
 object eliminate_intersection {
-  trait Event {
+  trait Event extends HasUserId with HasTimeStamp with HasDeviceId {
     def eventId: String
   }
-  trait UserEvent extends Event {
+  trait HasUserId {
     def userId: String
   }
-  trait TimestampedEvent extends Event {
+  trait HasTimeStamp {
     def timestamp: java.time.Instant
   }
-  trait DeviceEvent extends Event {
+  trait HasDeviceId {
     def deviceId: String
   }
+
+  object Solution {
+
+    sealed trait GeneralEvent { self =>
+      def eventId: String
+    }
+
+    // object GeneralEvent {
+    //   final case class TimestampedEvent(eventId: String, eventDetails: EventDetails, timeStamp: java.time.Instant) extends GeneralEvent
+    //   final case class NonTimeStampedEvent(event: String, eventDetails: EventDetails) extends GeneralEvent
+    // }
+
+    final case class Event(eventId: String, eventType: EventDetails, timeStamp: Option[java.time.Instant])
+
+    sealed trait EventDetails
+
+    object EventDetails {
+      final case class UserEvent(userId: String) extends EventDetails
+      final case class DeviceEvent(devideId: String) extends EventDetails
+    }
+  }
+
+  // trait MyEvent extends UserEvent with TimestampedEvent with DeviceEvent {
+  //   def eventId: String
+  //   def userId: String
+  //   def timestamp: java.time.Instant
+  //   def deviceId: String
+  // }
 
   object adt {
 
@@ -56,6 +86,8 @@ object eliminate_intersection {
  */
 object extract_product {
 
+  // (X * A) + (Y * A) + (Z * A) === > A * (X + Y + Z)
+
   /**
    * EXERCISE 1
    *
@@ -65,11 +97,13 @@ object extract_product {
    * introduce a new field called `eventType`, which captures event-specific details for the
    * different event types.
    */
-  sealed trait AdvertisingEvent
-  object AdvertisingEvent {
-    final case class Impression(pageUrl: String, data: String)                 extends AdvertisingEvent
-    final case class Click(pageUrl: String, elementId: String, data: String)   extends AdvertisingEvent
-    final case class Action(pageUrl: String, actionName: String, data: String) extends AdvertisingEvent
+  final case class AdvertisingEvent(pageUrl: String, data: String, eventType: AdvertisingEventType)
+
+  sealed trait AdvertisingEventType
+  object AdvertisingEventType {
+    case object Impression                      extends AdvertisingEventType
+    final case class Click(elementId: String)   extends AdvertisingEventType
+    final case class Action(actionName: String) extends AdvertisingEventType
   }
 
   /**
@@ -119,12 +153,17 @@ object extract_sum {
    *
    * Extract out a missing enumeration from the following data type.
    */
-  final case class Person(
-    name: String,
-    job: Option[Job],                                // employed
-    employmentDate: Option[java.time.LocalDateTime], // if employed
-    school: Option[Enrollment]                       // full-time student
-  )
+  final case class Person(name: String, personType: PersonType)
+
+  sealed trait PersonType
+
+  object PersonType {
+    final case class Employed(job: Job, employmentDate: java.time.LocalDateTime) extends PersonType
+    final case class Student(enrollment: Enrollment) extends PersonType
+    case object Unemployed extends PersonType
+  }
+
+  // Full time student AND employeed, employment date and no job
 
   /**
    * EXERCISE 2

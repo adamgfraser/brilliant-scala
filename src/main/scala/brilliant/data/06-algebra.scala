@@ -5,13 +5,220 @@ package brilliant.data
  */
 object special_types {
 
+  // Cardinality
+  // "Size" of different data types
+
+  // Any type as describing some set of values
+  // That set can have some size
+
+  // Boolean - 2 possible values Set(true, false)
+  // Unit - 1 (())
+  // Int - 32 bit signed integer
+
+  // Int - set of all 32 bit signed integers Int.+, Int.max
+
+  // Any - top type
+  //   Type that includes all possible values
+  //   Values that have no capabilities
+  //   Have no information associated with them
+
+  trait Animal extends Any
+
+  trait Cat extends Animal
+
+  // Nothing - bottom type
+  //  Type that includes no values, empty set
+  //  Value that has every possible capability
+
+
+  // val x: Int = throw new Exception
+
+  // type OptionUnit = Option[Unit]
+  // val first = None
+  // val second = Some(())
+  // val optionUnitValues: Set[OptionUnit] = Set(first, second)
+  // type OptionNothing = Option[Nothing]
+  // val third = None
+
+  final case class WorkflowState(interruptible: Boolean, interrupting: Boolean)
+
+  // 2 * 2
+
+  // interruptible and interrupting
+  // interruptible and not interrupting
+  // not interruptible and interrupting
+  // not interruptible and not interrupting
+
+  // combinatorics - multiple the size of the two sets
+
+  sealed trait MaybeWorkflowState
+
+  object MaybeWorkflowState {
+    case object None extends MaybeWorkflowState
+    case class SomeState(state: WorkflowState) extends MaybeWorkflowState
+  }
+
+  // 1 + (2 * 2)
+
+  // plus
+
+  // 4 possibilities
+
+
+  // A * B
+  final case class MyTuple[A, B](a: A, b: B)
+
+  // E + A
+  // type MyEither[+E, +A] = Either[E, A]
+
+  // 2 * 2
+  final case class WorkflowState2(interruptible: InterruptibleStatus, interrupting: InterruptingStatus)
+
+  sealed trait InterruptibleStatus
+
+  case object InterruptibleStatus {
+    case object Interruptible extends InterruptibleStatus
+    case object NotInterruptible extends InterruptibleStatus
+  }
+
+  sealed trait InterruptingStatus
+
+  case object InterruptingStatus {
+    case object Interrupting extends InterruptingStatus
+    case object NotInterrupting extends InterruptingStatus
+  }
+
+
+  // 1 + 1 + 1 + 1
+
+  sealed trait WorkflowState3
+
+  object WorkflowState3 {
+    case object InterruptibleAndNotInterrupting extends WorkflowState3
+    case object InterruptibleAndInterrupting extends WorkflowState3
+    case object NotInterruptibleAndInterrupting extends WorkflowState3
+    case object NotInterruptibleAndNotInterrupting extends WorkflowState3
+  }
+
+  // Three possible results from pulling from a stream
+  // Got a value of type A and if you pull again there will potentially be more values
+  // Got an error of type E and you're done
+  // Got an end of stream signal
+
+  // E + A
+  trait IO[+E, +A]
+
+  // A + E + 1
+
+  type Pull[+E, +A] = IO[Option[E], A]
+
+  // A
+  // val x: Either[Nothing, Int] = ???
+
+  sealed trait MyEither[+E, +A]
+
+  object MyEither {
+    case class Left[E](value: E) extends MyEither[E, Nothing]
+    case class Right[A](value: A) extends MyEither[Nothing, A]
+  }
+
+  // A + 0 ===> A
+
+  def eliminateEither[A](either: Either[Nothing, A]): A =
+    either match {
+      case Left(e) => e
+      case Right(a) => a
+    }
+
+  val myStrangeComputation: Either[UserValidationError, Nothing] =
+    ???
+
+  // 0 + 0 == 0
+  val myEvenStrangeComputation: Either[Nothing, Nothing] =
+    ???
+
+  val myComputation: Either[String, Int] = ???
+  val myComputation2: Either[Throwable, Int] = ???
+  val myComputation3: Either[Nothing, Int] = ???
+
+  val myComputationWithDefault: Either[Nothing, Int] =
+    myComputation match {
+      case Left(_) => Right(0)
+      case Right(n) => Right(n)
+    }
+
+  // Throwable can take on an infinite number of values
+
+  sealed trait UserValidationError
+
+  object UserValidationError {
+    final case class UserNotFound(userId: Int) extends UserValidationError
+    final case class InvalidEmail(userInput: String, validationErrorMessage: String) extends UserValidationError
+  }
+
+  final case class Indexed[+A](value: A, index: Long)
+
+  // 2^64 * 0 == 0
+  type IndexedNothing = Indexed[Nothing]
+
+  trait Equivalence[From, To] {
+    def from(from: From): To
+    def to(to: To): From
+  }
+
+  // Either[A, B]
+//  Either[B, A]
+
+  // map
+  // flatMap
+  // orElse
+
+  // Either[A, B]
+  // Either[B, A]
+
+  // Int | String
+  // String | Int
+
+  // val xxx: Either[Int, String] = ???
+  // val yyy: Either[String, Int] = xxx
+
+  def swap[A, B](either: Either[A, B]): Either[B, A] =
+    either match {
+      case Left(a) => Right(a)
+      case Right(b) => Left(b)
+    }
+
+    // (String, Int)
+
+    // (Int, String)
+
+  val booleanInterruptStatusEquivalence: Equivalence[Boolean, InterruptibleStatus] =
+    new Equivalence[Boolean, InterruptibleStatus] {
+      def from(from: Boolean): InterruptibleStatus =
+        if (from) InterruptibleStatus.Interruptible
+        else InterruptibleStatus.NotInterruptible
+      def to(to: InterruptibleStatus): Boolean =
+        to match {
+          case InterruptibleStatus.Interruptible => true
+          case InterruptibleStatus.NotInterruptible => false
+        }
+    }
+
+  def fromBooleanWhereTrueIsInterruptible(boolean: Boolean) = ???
+  def fromBooleanWhereFalseIsInterruptible(boolean: Boolean) = ???
+
+  // Boolean
+
+
+  // 2 + 2
+
   /**
    * EXERCISE 1
    *
    * Find a type existing in the Scala standard library, which we will call `One`, which has a
    * single "inhabitant" (i.e. there exists a single unique value that has this type).
    */
-  type One = TODO
+  type One = Unit
 
   /**
    * EXERCISE 2
@@ -19,7 +226,7 @@ object special_types {
    * Find a type existing in the Scala standard library, which we will call `Zero`, which has no
    * "inhabitants" (i.e. there exists no values of this type).
    */
-  type Zero = TODO
+  type Zero = Nothing
 
   /**
    * EXERCISE 3

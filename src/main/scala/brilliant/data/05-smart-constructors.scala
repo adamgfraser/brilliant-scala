@@ -1,5 +1,7 @@
 package brilliant.data
 
+import javax.swing.event.DocumentEvent.EventType
+
 /** Sometimes we don't want to take the time to model data precisely. For
   * example, we might want to model an email address with a string, even though
   * most strings are not valid email addresses.
@@ -177,14 +179,90 @@ object applied_smart_constructors {
     * Identify the weaknesses in this data type, and use smart constructors (and
     * possibly other techniques) to correct them.
     */
-  final case class SecurityEvent(
-      machine: String,
-      timestamp: String,
-      eventType: Int
-  )
-  object EventType {
-    val PortScanning = 0
-    val DenialOfService = 1
-    val InvalidLogin = 2
-  }
+  // final case class SecurityEvent(
+  //     machine: Machine,
+  //     timestamp: Timestamp,
+  //     eventType: EventType
+  // )
+
+//   sealed trait EventType {
+//     def toInt: Int =
+//       this match {
+//         case EventType.PortScanning    => 0
+//         case EventType.DenialOfService => 1
+//         case EventType.InvalidLogin    => 2
+//       }
+//   }
+
+//   object EventType {
+//     case object PortScanning extends EventType
+//     case object DenialOfService extends EventType
+//     case object InvalidLogin extends EventType
+
+//     def fromInt(int: Int): Option[EventType] =
+//       int match {
+//         case 0 => Some(PortScanning)
+//         case 1 => Some(DenialOfService)
+//         case 2 => Some(InvalidLogin)
+//         case _ => None
+//       }
+
+//     def unsafeFromInt(int: Int): EventType =
+//       fromInt(int).getOrElse(throw new IllegalArgumentException(s"invalid event type: $int"))
+//   }
+
+
+
+//   sealed abstract case class Machine private (value: String)
+
+//   object Machine {
+//     def fromString(string: String): Option[Machine] =
+//       ???
+//   }
+
+//   sealed abstract case class Timestamp private (value: String)
+
+//   object Timestamp {
+//     def fromString(string: String): Option[Timestamp] =
+//       ???
+//   }
+
+//   sealed trait EventType
+// object EventType{
+//   case object PortScanning extends EventType
+//   case object DenialOfService extends EventType
+//   case object InvalidLogin extends EventType
+// }
+// sealed abstract case class SecurityEvent private(machine: SecurityEvent.IPv4,
+//                                                  timestamp: java.time.Instant,
+//                                                  eventType: EventType)
+// object SecurityEvent {
+//   private[this] val Machine = raw"(\d+)\.(\d+)\.(\d+)\.(\d+)".r
+//   type IPv4 = (Int, Int, Int, Int)
+//   def mkSecEvent(machine: String, timestamp: java.time.Instant, event: EventType): Option[SecurityEvent] =
+//     machine match {
+//       case Machine(n1, n2, n3, n4) =>
+//         val ip: IP = (java.lang.Integer.parseInt(n1),
+//           java.lang.Integer.parseInt(n2),
+//           java.lang.Integer.parseInt(n3),
+//           java.lang.Integer.parseInt(n4))
+//         Some(new SecurityEvent(ip, timestamp, event) {})
+//       case _ => None
+//     }
+// }
+
+// type Machine = String   //Not sure I actually want a wrapper here, but gives clarity in code
+//   /**
+//    * EXERCISE 3
+//    *
+//    * Identify the weaknesses in this data type, and use smart constructors (and possibly other
+//    * techniques) to correct them.
+//    */
+//   final case class SecurityEvent(machine: Machine,
+//                                  timestamp: Instant,
+//                                  eventType: EventType.type)
+
+//   object EventType extends  Enumeration {
+//     val PORTS_CANNING,DENIAL_OF_SERVICE,INVALID_LOGIN = Value
+//   }
 }
