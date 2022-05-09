@@ -3,6 +3,8 @@ package brilliant.futures
 import scala.concurrent._
 
 import FutureExtensions._
+import scala.util.Failure
+import scala.util.Success
 
 /**
   * You can think of the `Future` data type as being very similar to the `Async`
@@ -45,21 +47,33 @@ object FutureBasics {
     * `Future`.
     */
   lazy val successful: Future[Int] =
-    ???
+    Future.successful(42)
 
   /**
     * Use the `Future.failed` constructor to construct a future that has
     * already failed with the specified `Throwable`.
     */
   lazy val failed: Future[Nothing] =
-    ???
+    Future.failed(new Exception("oops"))
 
   /**
     * Use the `fromTry` constructor to construct a `Future` from an existing
     * `scala.util.Try` value.
     */
-  lazy val fromTry: Future[Int] =
-    ???
+  lazy val fromTry: Future[Int] = {
+    val myTry = scala.util.Try {
+      val x = 1
+      val y = 2
+      x + y
+      throw new Exception("oops")
+    }
+    Future.fromTry(myTry)
+
+    myTry match {
+      case scala.util.Failure(exception) => Future.failed(exception)
+      case scala.util.Success(value) => Future.successful(value)
+    }
+  }
 
   /**
     * Use the `Future.apply` constructor to construct a `Future` from a value
@@ -68,14 +82,16 @@ object FutureBasics {
     * implemented in this section.
     */
   lazy val apply: Future[Int] =
-    ???
+    Future(42)
+
+  // "short circuiting semantics"
 
   /**
     * Use the `map` operator on `Future` to transform the successful result of
     * the `successful` future you defined above.
     */
   lazy val map: Future[Int] =
-    ???
+    apply.map(_ * 2)
 
   /**
     * Use the `map` operator on `Future` to transform the failed result of the
@@ -98,7 +114,17 @@ object FutureBasics {
     * `doubleIt` operator defined above.
     */
   lazy val flatMap: Future[Int] =
-    ???
+    for {
+      n             <- apply
+      doubled       <- doubleIt(n)
+      doubleDoubled <- doubleIt(doubled)
+    } yield doubleDoubled
+
+  // flatMap
+  // ???
+
+  def map[A, B](future: Future[A])(f: A => B): Future[B] =
+    future.flatMap(a => Future.successful(f(a)))
 }
 
 /**
@@ -127,20 +153,49 @@ object Parallelism extends App {
       3
     }
 
+  // Two sleeping
+  // Two waking up
+  // Three sleeping
+  // Three waking up
   def future1(implicit ec: ExecutionContext): Future[Int] =
     for {
-      two <- asyncTwo
-      three <- asyncThree
+      two   <- asyncTwo(ec)
+      three <- asyncThree(ec)
     } yield two + three
 
+  // val
+  // Two sleeping
+  // Three sleeping
+  // Two waking up
+  // Three waking up
+
+  // Future.sequence()
+
+  // lazy val
+  // Three sleeping
+  // Three waking up
+  // Two sleeping
+  // Two waking up
   def future2(implicit ec: ExecutionContext): Future[Int] = {
-    val asyncTwo1 = asyncTwo
-    val asyncThree1 = asyncThree
+    lazy val asyncTwo1   = asyncTwo(ec)
+    lazy val asyncThree1 = asyncThree(ec)
     for {
-      two <- asyncTwo1
       three <- asyncThree1
+      two   <- asyncTwo1
     } yield two + three
   }
 
-  future1(ec).await(ec)
+  def zipPar[A, B](futureA: Future[A], futureB: Future[B])(implicit ec: ExecutionContext): Future[(A, B)] =
+    futureA.zip(futureB)
+
+  val never: Future[Nothing] =
+    Future.never
+
+  val failed: Future[Nothing] =
+    Future.failed(new Exception("oops"))
+
+  val zipped =
+    zipPar(never, failed)(ec)
+
+  zipped.await(ec)
 }

@@ -1,4 +1,6 @@
 package brilliant.futures
+import scala.util.Failure
+import scala.util.Success
 
 /**
   * As we have discussed, `Future` is like the version of our `Async` data
@@ -23,7 +25,7 @@ object ErrorHandling {
     * return the result of `successfulFuture` instead.
     */
   val recoveredFuture: Future[Int] =
-    ???
+    failedFuture.fallbackTo(successfulFuture)
 
   /**
     * The `transform` operator allows you to map both the error and success
@@ -36,7 +38,7 @@ object ErrorHandling {
     ???
 
   /**
-    * There is also a variant of `transform` called `transformWith1` that allows
+    * There is also a variant of `transform` called `transformWith` that allows
     * specifiying a function from `Try` to `Future` that lets you handle both
     * the failure and success possibilites and run a new computation for each.
     * Perform a workflow of your choice for the successful and failed values
@@ -45,6 +47,13 @@ object ErrorHandling {
     * Note how much information you have about the failure possibilities in
     * your implementation.
     */
-  def transformedFuture2(in: Future[Int])(implicit ec: ExecutionContext): Future[String] =
-    ???
+  def transformedFuture2(in: Future[Int])(implicit ec: ExecutionContext): Future[Int] =
+    in.transformWith {
+      case Failure(exception) =>
+        println(exception.getStackTrace())
+        Future.successful(0)
+      case Success(value) =>
+        if (value % 2 == 0) Future.successful(value)
+        else Future.failed(new Exception("Odd number"))
+    }
 }

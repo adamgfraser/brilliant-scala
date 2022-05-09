@@ -116,6 +116,9 @@ object Callbacks extends App {
 
   var x = 1
 
+  def increment: Int =
+    ???
+
   def asyncIncrement(callback: Int => Unit): Unit =
     fork {
       x += 1
@@ -179,7 +182,29 @@ final case class Async[+A](register: (A => Unit) => Unit) { self =>
     * after the other.
     */
   def zipWithPar[B, C](that: Async[B])(f: (A, B) => C): Async[C] =
-    ???
+    Async[C] { cb =>
+
+      sealed trait State
+
+      case object Empty extends State
+      case class LeftDone(a: A) extends State
+      case class RightDone(b: B) extends State
+
+      val state = new java.util.concurrent.atomic.AtomicReference[State](Empty)
+
+      self.runAsync { a =>
+        state.getAndSet(LeftDone(a)) match {
+          case RightDone(b) => cb(f(a, b))
+          case _ => ()
+        }
+      }
+      that.runAsync { b =>
+        state.getAndSet(RightDone(b)) match {
+          case LeftDone(a) => cb(f(a, b))
+          case _ => ()
+        }
+      }
+    }
 
   def runAsync(cb: A => Unit): Unit =
     register(cb)
@@ -216,13 +241,67 @@ object AsyncExample extends App {
       a + 1
     }
 
-  val asyncSum = for {
+  val asyncSumSugared = for {
     x <- asyncIncrement(0)
     y <- asyncIncrement(x)
     z <- asyncIncrement(y)
   } yield z
 
-  asyncSum.runAsync(n => println(n))
+  val asyncSumDesugared =
+    asyncIncrement(0).flatMap { x =>
+      asyncIncrement(x).flatMap { y =>
+        asyncIncrement(y).map { z =>
+          z
+        }
+      }
+    }
+
+  asyncSumSugared.runAsync(n => println(n))
+}
+
+object Exercises {
+
+  final case class Async[+E, +A](register: (Either[E, A] => Unit) => Unit) { self =>
+
+    def map[B](f: A => B): Async[E, B] =
+      mapEither(a => Right(f(a)))
+
+    def mapEither[E1 >: E, B](f: A => Either[E1, B]): Async[E1, B] =
+      Async { cb =>
+        register(either => cb(either.flatMap(f)))
+      }
+
+    def flatMap[E1 >: E, B](f: A => Async[E1, B]): Async[E1, B] =
+      Async { cb =>
+        register {
+          case Right(a) => f(a).register(cb)
+          case Left(e) => cb(Left(e))
+        }
+      }
+
+    def runAsync(cb: Either[E, A] => Unit): Unit =
+      register(cb)
+  }
+
+  object Async {
+
+    def succeed[A](a: A): Async[Nothing, A] =
+      Async(cb => cb(Right(a)))
+
+    def fail[E](e: E): Async[E, Nothing] =
+      Async(cb => cb(Left(e)))
+
+    val never: Async[Nothing, Nothing] =
+      Async(_ => ())
+
+    def async[E, A](either: => Either[E, A]): Async[E, A] =
+      Async { cb =>
+        val thread = new Thread { override def run(): Unit = cb(either) }
+        thread.start()
+      }
+    }
+
+  type Future[+A] = Async[Throwable, A]
 }
 
 /**
@@ -230,3 +309,7 @@ object AsyncExample extends App {
   * handling.
   */
 final case class Async2[+E, +A](register: (Either[E, A] => Unit) => Unit)
+
+object MyFutureExample {
+  type MyFuture[+A] = Async2[Throwable, A]
+}

@@ -10,6 +10,15 @@ object subtyping {
 
   // What's the deal with the + and -
 
+  sealed trait DomainError
+
+  object DomainError {
+    case object NotFound extends DomainError
+    case object Invalid extends DomainError
+  }
+
+  // Either[+E, +A]
+
   trait Validation[+E, +A]
 
   // trait LazyList[+A] {
@@ -41,8 +50,9 @@ object subtyping {
   // concrete types
 
   trait Animal
-  trait Dog       extends Animal
-  trait Cat       extends Animal // cat is a subtype of animal
+  trait Mammal extends Animal
+  trait Dog       extends Mammal
+  trait Cat       extends Mammal // cat is a subtype of animal
   object Midnight extends Cat
   object Ripley   extends Dog
 
@@ -54,12 +64,148 @@ object subtyping {
 
   // type constructor
   // parameterized type
+
+  // covariant
+
+  // covary
+  // vary together
+
+  // education
+  // income
+
+  // covariant
+
+  // subtyping relationship for list of A is same as subtyping relationship for A
+  // animal <: cat ===> list of animal <: list of cat
+
+  // values that are covariant either "contain" or "produce" values of type A
+  // A is an output from this data type
+
+  // List[A], Vector[A], Option[A]
+  // Future[A], XYZLibrary[A]
+
+  // contravariant
+
+  // subtyping relationship for the parameterized type is the opposite of the type it is parameterized on
+  // cat <: animal ===> animalhotel <: cathotel
+
+  // Takes A an input or "consumes" A values is contravariant
+
+  trait Channel[-A, +B, +C] {
+    def send(a: Option[A]): (B, C)
+  }
+
+  type MyChannel = Channel[Int, Any, Any]
+
+  sealed trait Event extends Product with Serializable
+
+  object Event {
+    final case class UserEvent() extends Event
+    final case class SystemEvent() extends Event
+  }
+
+  trait ABC[-A]
+
+  trait Container[+A] {
+    def x: A
+    def map[B](f: A => B): Container[B]
+    def widen[B >: A]: Container[B] =
+      map(a => a)
+  }
+
+  // EventSink[A]
+
+  // trait PetHotel[-A] {
+  //   def lodge(pet: A): Unit
+  // }
+
+  trait Animal2
+
+  trait HasTail extends Animal2
+  trait HasFourLegs extends Animal
+  trait HasFur extends Animal2
+
+  trait Channel2[-Input, +Output] { self =>
+    def zip[Input2, Output2](that: Channel2[Input2, Output2]): Channel2[(Input, Input2), (Output, Output2)] =
+      ???
+  }
+
+  trait Sink[-A] { self =>
+    def send(a: A): Unit
+    def either[B](that: Sink[B]): Sink[Either[A, B]] =
+      new Sink[Either[A, B]] {
+        def send(a: Either[A,B]): Unit =
+          a match {
+            case Left(a) => self.send(a)
+            case Right(b) => that.send(b)
+          }
+        
+      }
+    def eitherWith[B, C](that: Sink[B])(f: C => Either[A, B]): Sink[C] =
+      either(that).contramap(f)
+    def contramap[B](f: B => A): Sink[B] =
+      new Sink[B] {
+        def send(a: B): Unit = self.send(f(a))
+      }
+  }
+
+  trait Encoder[-From, +To] { self =>
+    def encode(from: From): To
+    def andThen[To2](that: Encoder[To, To2]): Encoder[From, To2] =
+      new Encoder[From, To2] {
+        def encode(from: From): To2 =
+          that.encode(self.encode(from))
+      }
+    def map[To2](f: To => To2): Encoder[From, To2] =
+      ???
+    def contramap[From0](f: From0 => From): Encoder[From0, To] =
+      ???
+  }
+
+  trait JSONEncoder[-A] {
+    def encode(a: A): String
+    def contramap[B](f: B => A): JSONEncoder[B] =
+      (b: B) => encode(f(b))
+  }
+
+  trait JSONDecoder[+A] { self =>
+    def decode(s: String): A
+    def map[B](f: A => B): JSONDecoder[B] =
+      new JSONDecoder[B] {
+        def decode(s: String): B = f(self.decode(s))
+      }
+  }
+
+  trait UserEventV1 {
+    def toV2: UserEventV2
+  }
+
+  trait UserEventV2 {
+    def toV1: UserEventV1
+  }
+
+  lazy val userEventV1Codec: JSONCodec[UserEventV1] =
+    ???
+
+  trait JSONCodec[A] extends JSONDecoder[A] with JSONEncoder[A] { self =>
+    def transform[B](to: A => B, from: B => A): JSONCodec[B] = {
+      new JSONCodec[B] {
+        def decode(s: String): B =
+          to(self.decode(s))
+        def encode(a: B): String =
+          self.encode(from(a))
+      }
+    }
+  }
+
   trait LazyList[+A] {
-    // def concat(that: LazyList[A]): LazyList[A]
+    def concat[A1 >: A](that: LazyList[A1]): LazyList[A1]
     // def map[B](f: A => B): LazyList[B]
     // def widen[B >: A]: LazyList[B] =
     //   map(a => a)
   }
+
+  // contravariance
 
   // no plus or minus ==> invariant
   // invariance means that the catList and animalList are completely unrelated types
@@ -71,7 +217,7 @@ object subtyping {
   val catList: LazyList[Cat] = ???
   val dogList: LazyList[Dog] = ???
 
-  // val animalList2: LazyList[Animal] = catList.widen[Animal].concat(dogList.widen[Animal])
+  val animalList2: LazyList[Mammal] = catList.concat(dogList)
 
   type CatListIsAnimalList = IsSubtypeOf[LazyList[Cat], LazyList[Animal]] // doesn't compile but we want it to
 

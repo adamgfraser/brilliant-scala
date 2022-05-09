@@ -257,4 +257,19 @@ object intro {
 
   }
 
+  // where to put operators on data types?
+
+  // you can think of almost every operator on a data type as either a unary or a binary operator
+
+  final case class Student(name: String, school: String) {
+
+  }
+
+  object Student {
+
+    // n-ary
+
+
+  }
+
 }
