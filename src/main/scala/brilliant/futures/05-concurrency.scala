@@ -76,6 +76,38 @@ object Concurrency {
     right.onComplete(tryB => promise.trySuccess(() => rightWinner(tryB, left)))
     promise.future.flatMap(f => f())
   }
+
+  /**
+    * Run `left` and `right` in parallel and collect the results of both when
+    * both are done, but if either one fails then return immediately with that
+    * failure.
+    */
+  def zipPar[A, B](left: Future[A], right: Future[B])(implicit ec: ExecutionContext): Future[(A, B)] =
+    raceWith(left, right)(
+      {
+        case (Success(a), future) => future.map(b => (a, b))
+        case (Failure(t), future) => Future.failed(t)
+      },
+      {
+        case (Success(b), future) => future.map(a => (a, b))
+        case (Failure(t), future) => Future.failed(t)
+      }
+    )
+
+  def zipPar[A, B, C](futureA: Future[A], futureB: Future[B], futureC: Future[C]): Future[(A, B, C)] =
+    ???
+
+  // Future.sequence
+
+  def collectAllPar[A](futures: List[Future[A]])(implicit ec: ExecutionContext): Future[List[A]] =
+    futures.foldLeft(Future.successful(List.empty[A])) { (future, next) =>
+      zipPar(next, future).map { case (a, as) => a :: as }
+    }.map(_.reverse)
+
+  // val p = Promise[List[A]]()
+  // futures.foreach(_.onComplete(_.failed.foreach(p.tryFailure)))
+  // Future.sequence(future).foreach(p.trySuccess)
+  // p.future
 }
 
 object ConcurrencyExample extends App {

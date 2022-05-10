@@ -51,7 +51,9 @@ object Blocking {
     * run.
     */
   object Good {
-    someFuture.map(someTransformation).foreach(println)
+    someFuture
+      .map(someTransformation)
+      .foreach(println)
   }
 
   /**
@@ -60,6 +62,8 @@ object Blocking {
     * be signaled versus the application suspended indefinitely.
     */
   object Timeouts
+
+  // ZIO 1.0 number of operating system cores for the core thread pool
 
   /**
     * Sometimes we need to work with third party APIs that block internally.

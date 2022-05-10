@@ -22,7 +22,7 @@ object FutureIssues
   * insignificant changes can dramatically impact the semantics of a program.
   * It can also make it harder to define operators for futures.
   */
-object EvaluationModel {
+object EvaluationModel extends App {
   import scala.concurrent._
   import scala.util._
 
@@ -36,6 +36,17 @@ object EvaluationModel {
       else throw new Exception("Boom!")
     }
 
+  // def x = future // okay
+  // val x = future // start the evalation
+  // lazy val x = future // doesn't start evaluation, but it will memoize this value
+
+  // val future1 = future
+  // def runFuture = () => future1
+
+  // // val z = List(x)
+
+  // runFuture()
+
   /**
     * Explain why this operator will not have the desired semantics.
     */
@@ -44,6 +55,8 @@ object EvaluationModel {
       case Failure(t) => retry(future)
       case Success(a) => Future.successful(a)
     }
+
+  retry(future)
 }
 
 /**
@@ -56,3 +69,7 @@ object EvaluationModel {
   * resource leak. `Future` does not give us any way to deal with this.
   */
 object ResourceSafety
+
+object StackTraces
+
+object HeavyWeightThreads

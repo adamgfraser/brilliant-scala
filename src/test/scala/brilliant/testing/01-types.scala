@@ -3,6 +3,7 @@ package brilliant.testing
 import zio.test._
 
 import java.time.Instant
+import scala.collection.immutable.SortedMap
 
 /**
  * While Scala's type system can't replace the need for testing, we can make
@@ -18,12 +19,12 @@ import java.time.Instant
 object Types extends ZIOSpecDefault {
 
   def spec = suite("loadActions")(
-    test("all instants have at least one associated action") {
-      ???
-    },
-    test("instants are distinct") {
-      ???
-    },
+    // test("all instants have at least one associated action") {
+    //   ???
+    // },
+    // test("instants are distinct") {
+    //   ???
+    // },
     test("instants are sorted") {
       ???
     }
@@ -45,6 +46,24 @@ object TypesExample {
    * only occur once in the list and the list should be sorted in ascending
    * order.
    */
-  def loadActions: List[(Instant, List[Action])] =
+  def loadActions: SortedMap[Instant, ::[Action]] =
     ???
+
+  loadActions.get(Instant.now) match {
+    case Some(actions) =>
+      actions match {
+        case first :: rest => ???
+      }
+    case None => ???
+  }
+
+  object Example {
+
+    sealed trait List[+A]
+
+    object List {
+      final case class ::[A](head: A, tail: List[A]) extends List[A]
+      case object Nil extends List[Nothing]
+    }
+  }
 }

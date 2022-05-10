@@ -41,11 +41,29 @@ object Interop {
 
   // libraryDependencies += "com.google.guava" % "guava" % "31.1-jre"
 
-  /**
+  import com.google.common.util.concurrent.ListenableFuture
+  import java.util.concurrent.Executor
+
+  // import scala.util.control.NonFatal
+
+  /** 
     * Pick another asynchronous data type of your choice. Implement a
-    * constructor to convert values of that data type into a `Future`. Note
-    * whether your implementation ever blocks a thread.
+    * construc whether your implementation ever blocks a thread.
     */
-  def from[A](in: ???): Future[A] =
-    ???
+  def fromFutureGuava[A](future: ListenableFuture[A])(implicit ec: ExecutionContext): Future[A] = {
+    val promise = Promise[A]()
+    future.addListener(
+      new Runnable {
+        def run(): Unit =
+          promise.complete(Try(future.get()))
+      },
+      executionContextAsExectutor(ec)
+    )
+    promise.future
+  }
+
+  private def executionContextAsExectutor(ec: ExecutionContext): Executor =
+    new Executor {
+      def execute(command: Runnable): Unit = ec.execute(command)
+    }
 }

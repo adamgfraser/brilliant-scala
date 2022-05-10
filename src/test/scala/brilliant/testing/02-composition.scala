@@ -31,4 +31,23 @@ object CompositionExample {
     val name = scala.io.StdIn.readLine("What is your name? ")
     println(s"Hello, $name!")
   }
+
+  def greet2: Unit = {
+    val prompt = "What is your name? "
+    val input = getInput(prompt)
+    val output = transformInput(input)
+    writeOutput(output)
+  }
+
+  def getInput(prompt: String): String = {
+    scala.io.StdIn.readLine(prompt)
+  }
+
+  def transformInput(input: String): String = {
+    s"Hello, $input!"
+  }
+
+  def writeOutput(output: String): Unit = {
+    println(output)
+  }
 }

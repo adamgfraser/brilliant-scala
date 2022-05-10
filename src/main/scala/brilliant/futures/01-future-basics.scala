@@ -177,8 +177,8 @@ object Parallelism extends App {
   // Two sleeping
   // Two waking up
   def future2(implicit ec: ExecutionContext): Future[Int] = {
-    lazy val asyncTwo1   = asyncTwo(ec)
-    lazy val asyncThree1 = asyncThree(ec)
+    val asyncTwo1   = asyncTwo(ec)
+    val asyncThree1 = asyncThree(ec)
     for {
       three <- asyncThree1
       two   <- asyncTwo1
