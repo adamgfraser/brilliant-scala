@@ -22,6 +22,8 @@ libraryDependencies ++= Seq(
 libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 
+libraryDependencies += "com.google.guava" % "guava" % "31.1-jre"
+
 testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")

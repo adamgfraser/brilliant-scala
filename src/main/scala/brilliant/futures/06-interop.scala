@@ -19,6 +19,17 @@ object Interop {
     promise.future
   }
 
+  trait User
+
+  trait NonblockingDatabase {
+    def loadUser[A](id: Int)(cb: (User => A) => Unit): Unit =
+      ???
+  }
+
+  trait NonblockingDatabaseFuture {
+    def loadUser[A](id: Int): Future[A]
+  }
+
   /**
     * Implement the `asyncEither` constructor, which wraps a callback based API
     * that allows us to call back with either a success or failure in a
@@ -27,6 +38,8 @@ object Interop {
     */
   def asyncTry[A](register: (Try[A] => Unit) => Unit)(implicit ec: ExecutionContext): Future[A] =
     ???
+
+  // libraryDependencies += "com.google.guava" % "guava" % "31.1-jre"
 
   /**
     * Pick another asynchronous data type of your choice. Implement a

@@ -39,7 +39,7 @@ object Promises {
 
     def make[A]: Promise[A] =
       new Promise[A] {
-        val state = new java.util.concurrent.atomic.AtomicReference[State[A]]
+        val state = new java.util.concurrent.atomic.AtomicReference[State[A]](State.Empty[A](Nil))
 
         def await: Async[A] =
           Async { callback =>
@@ -65,7 +65,8 @@ object Promises {
             currentState match {
               case State.Empty(callbacks) =>
                 result = true
-                callbacks.foreach(callback => callback(a))
+                loop = !state.compareAndSet(currentState, State.Full(a))
+                if (!loop) callbacks.foreach(callback => callback(a))
               case State.Full(value) =>
                 loop = false
             }
@@ -110,14 +111,14 @@ object PromiseConstructors {
     * constructor on `Promise`.
     */
   lazy val empty: Promise[Int] =
-    ???
+    Promise[Int]()
 
   /**
     * Create a `Promise` that is done with an existing value of your choice
     * using the `successful` constructor on `Promise`.
     */
   lazy val alreadyDone: Promise[Int] =
-    ???
+    Promise.successful(42)
 
   /**
     * Create a `Promise` that is already failed with a failure of your choice
@@ -126,14 +127,16 @@ object PromiseConstructors {
     * failed.
     */
   lazy val alreadyFailed: Promise[Int] =
-    ???
+    Promise.failed(new Exception("I'm a failure"))
+
+  import scala.util.Try
 
   /**
     * Create a `Promise` that is either successful or failed using the `fromTry`
     * constructor on `Promise`.
     */
   lazy val alreadySomething: Promise[Int] =
-    ???
+    Promise.fromTry(Try(42))
 }
 
 /**
@@ -159,21 +162,21 @@ object PromiseOperators {
     * a `Promise` to be completed using the `future` operator on `Promise`.
     */
   lazy val waitForTheBox: Future[Int] =
-    ???
+    emptyBox.future
 
   /**
     * Create an operator that will complete the `Future` with a successful
-    * value using the `succeed` operator on `Promise`.
+    * value using the `success` operator on `Promise`.
     */
   def fillTheBox(n: Int): Unit =
-    ???
+    emptyBox.success(n)
 
   /**
     * Create another operator that will fail the box with an error of your
     * choice.
     */
   def failTheBox(t: Throwable): Unit =
-    ???
+    emptyBox.failure(t)
 
   /**
     * As we saw above, a `Promise` can only ever be completed once, so 
