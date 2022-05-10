@@ -1,5 +1,7 @@
 package brilliant.futures
 
+import scala.util._
+
 /**
   * Because of the model of "implicit" concurrency built into `Future` it
   * has relatively few concurrency operators. Normally we control whether
@@ -44,5 +46,16 @@ object Concurrency {
     * failure at your discretion or combine them.
     */
   def race[A](left: Future[A], right: Future[A]): Future[A] =
+    ???
+
+  /**
+    * Implement `raceWith`, which is the most powerful operator for running
+    * two workflows concurrently. Use this to implement a version of `zipPar`
+    * that supports early termination.
+    */
+  def raceWith[A, B, C](left: Future[A], right: Future[B])(
+    leftWinner: (Try[A], Future[B]) => Future[C],
+    rightWinner: (Try[B], Future[A]) => Future[C]
+  )(implicit ec: ExecutionContext): Future[C] =
     ???
 }

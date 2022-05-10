@@ -49,7 +49,7 @@ object ParallelFib extends ZIOAppDefault {
     def loop(n: Int, original: Int): UIO[BigInt] =
       if (n <= 1) ZIO.succeed(n)
       else
-        UIO.suspendSucceed {
+        ZIO.suspendSucceed {
           (loop(n - 1, original) zipWith loop(n - 2, original))(_ + _)
         }
 
@@ -155,7 +155,7 @@ object ParallelZip extends ZIOAppDefault {
   def fib(n: Int): UIO[Int] =
     if (n <= 1) ZIO.succeed(n)
     else
-      UIO.suspendSucceed {
+      ZIO.suspendSucceed {
         (fib(n - 1) zipWith fib(n - 2))(_ + _)
       }
 
@@ -230,12 +230,22 @@ object StmLock extends ZIOAppDefault {
   val run =
     (for {
       lock <- Lock.make
-      fiber1 <- lock.acquire
-                 .acquireRelease(lock.release)(printLine("Bob  : I have the lock!"))
+      fiber1 <- ZIO.acquireReleaseWith {
+                  lock.acquire
+                  } { _ =>
+                    lock.release
+                  } { _ =>
+                    printLine("Bob: I have the lock!")
+                  }
                  .repeat(Schedule.recurs(10))
                  .fork
-      fiber2 <- lock.acquire
-                 .acquireRelease(lock.release)(printLine("Sarah: I have the lock!"))
+      fiber2 <- ZIO.acquireReleaseWith {
+                  lock.acquire
+                  } { _ =>
+                    lock.release
+                  } { _ =>
+                    printLine("Sarah: I have the lock!")
+                  }
                  .repeat(Schedule.recurs(10))
                  .fork
       _ <- (fiber1 zip fiber2).join

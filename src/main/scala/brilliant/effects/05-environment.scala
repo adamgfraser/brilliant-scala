@@ -177,7 +177,7 @@ object LayerEnvironment extends ZIOAppDefault {
   trait Files {
     def read(file: String): IO[IOException, String]
   }
-  object Files extends Accessible[Files] {
+  object Files {
 
     /**
      * EXERCISE
@@ -187,13 +187,13 @@ object LayerEnvironment extends ZIOAppDefault {
      */
     val live: ZLayer[Any, Nothing, Files] = ???
 
-    def read(file: String) = Files(_.read(file))
+    def read(file: String): ZIO[Files, IOException, String] = ???
   }
 
   trait Logging {
     def log(line: String): UIO[Unit]
   }
-  object Logging extends Accessible[Logging] {
+  object Logging {
 
     /**
      * EXERCISE
@@ -203,7 +203,7 @@ object LayerEnvironment extends ZIOAppDefault {
      */
     val live: ZLayer[Console, Nothing, Logging] = ???
 
-    def log(line: String) = Logging(_.log(line))
+    def log(line: String): ZIO[Logging, Nothing, Unit] = ???
   }
 
   /**

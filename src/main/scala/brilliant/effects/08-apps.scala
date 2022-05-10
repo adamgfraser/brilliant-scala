@@ -179,7 +179,7 @@ object parallel_web_crawler {
       url => if (url.parsed.apexDomain == Some("zio.dev")) Set(url) else Set()
 
     val Processor: (URL, String) => IO[Unit, List[(URL, String)]] =
-      (url, html) => IO.succeed(List(url -> html))
+      (url, html) => ZIO.succeed(List(url -> html))
   }
 
   /**

@@ -62,7 +62,7 @@ object PlatformTweaking {
    *
    * Modify the default platform by specifying a custom behavior for logging errors.
    */
-  lazy val platform = RuntimeConfig.default.copy(logger = ???)
+  lazy val platform = Runtime.addLogger(???)
 
   val environment = Runtime.default.environment
 

@@ -57,7 +57,7 @@ object Retry {
    *
    * Using `ZIO#retry`, retry the following error a total of five times.
    */
-  val error1   = IO.fail("Uh oh!")
+  val error1   = ZIO.fail("Uh oh!")
   val retried5 = ???
 
   /**
